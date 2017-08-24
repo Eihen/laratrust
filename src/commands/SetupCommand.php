@@ -52,6 +52,10 @@ class SetupCommand extends Command
             $this->calls['laratrust:team'] = 'Creating Team model';
         }
 
+        if (Config::get('laratrust.use_modules')) {
+            $this->calls['laratrust:module'] = 'Creating Module model';
+        }
+
         parent::__construct();
     }
 

@@ -35,9 +35,11 @@ class LaratrustServiceProvider extends ServiceProvider
         'MakeRole' => 'command.laratrust.role',
         'MakePermission' => 'command.laratrust.permission',
         'MakeTeam' => 'command.laratrust.team',
+        'MakeModule' => 'command.laratrust.module',
         'AddLaratrustUserTraitUse' => 'command.laratrust.add-trait',
         'Setup' => 'command.laratrust.setup',
         'SetupTeams' => 'command.laratrust.setup-teams',
+        'SetupModules' => 'command.laratrust.setup-modules',
         'MakeSeeder' => 'command.laratrust.seeder',
         'Upgrade' => 'command.laratrust.upgrade'
     ];
@@ -146,6 +148,13 @@ class LaratrustServiceProvider extends ServiceProvider
         });
     }
 
+    protected function registerMakeModuleCommand()
+    {
+        $this->app->singleton('command.laratrust.module', function($app) {
+           return new MakeModuleCommand($app['files']);
+        });
+    }
+
     protected function registerAddLaratrustUserTraitUseCommand()
     {
         $this->app->singleton('command.laratrust.add-trait', function () {
@@ -164,6 +173,13 @@ class LaratrustServiceProvider extends ServiceProvider
     {
         $this->app->singleton('command.laratrust.setup-teams', function () {
             return new SetupTeamsCommand();
+        });
+    }
+
+    protected function registerSetupModulesCommand()
+    {
+        $this->app->singleton('command.laratrust.setup-modules', function() {
+           return new SetupModulesCommand();
         });
     }
 
