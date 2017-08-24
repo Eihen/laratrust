@@ -55,6 +55,23 @@ class LaratrustSetupTeams extends Migration
 
             $table->unique(['{{ $laratrust['foreign_keys']['user'] }}', '{{ $laratrust['foreign_keys']['permission'] }}', 'user_type', '{{ $laratrust['foreign_keys']['team'] }}']);
         });
+
+@if ($laratrust['use_modules'])
+        //FixMe temp solution for enabling teams on already enabled modules assuring nothing will break
+        if (Schema::hasTable('{{ $laratrust['tables']['module_user'] }}'))
+        {
+            Schema::table('{{ $laratrust['tables']['module_user'] }}', function (Blueprint $table) {
+                $table->dropPrimary['{{ $laratrust['foreign_keys']['module'] }}', '{{ $laratrust['foreign_keys']['user'] }}', 'user_type']);
+
+                $table->unsignedInteger('{{ $laratrust['foreign_keys']['team'] }}')->nullable();
+
+                $table->primary['{{ $laratrust['foreign_keys']['module'] }}', '{{ $laratrust['foreign_keys']['user'] }}', 'user_type', '{{ $laratrust['foreign_keys']['team'] }}']);
+
+                $table->foreign('{{ $laratrust['foreign_keys']['team'] }}')->references('id')->on('{{ $laratrust['tables']['teams'] }}')
+                    ->onUpdate('cascade')->onDelete('cascade');
+            });
+        }
+@endif
     }
 
     /**
