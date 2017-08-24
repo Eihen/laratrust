@@ -33,6 +33,21 @@ trait LaratrustPermissionTrait
     }
 
     /**
+     * Many-to-Many relations with the module model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function modules()
+    {
+        return $this->belongsToMany(
+            Config::get('laratrust.models.module'),
+            Config::get('laratrust.tables.module_role'),
+            Config::get('laratrust.foreign_keys.permission'),
+            Config::get('laratrust.foreign_keys.module')
+        );
+    }
+
+    /**
      * Morph by Many relationship between the permission and the one of the possible user models.
      *
      * @param  string  $relationship
@@ -61,6 +76,7 @@ trait LaratrustPermissionTrait
         static::deleting(function ($permission) {
             if (!method_exists(Config::get('laratrust.models.permission'), 'bootSoftDeletes')) {
                 $permission->roles()->sync([]);
+                $permission->modules()->sync([]);
             }
         });
 
@@ -70,6 +86,7 @@ trait LaratrustPermissionTrait
             }
 
             $permission->roles()->sync([]);
+            $permission->modules()->sync([]);
 
             foreach (array_keys(Config::get('laratrust.user_models')) as $key) {
                 $permission->$key()->sync([]);

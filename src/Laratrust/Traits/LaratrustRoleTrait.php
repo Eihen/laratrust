@@ -36,6 +36,22 @@ trait LaratrustRoleTrait
     }
 
     /**
+     * Tries to return all the cached modules of the role.
+     * If it can't bring the modules from the cache,
+     * it brings them back from the DB.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function cachedModules()
+    {
+        $cacheKey = 'laratrust_modules_for_role_' . $this->getKey();
+
+        return Cache::remember($cacheKey, Config::get('cache.ttl', 60), function () {
+            return $this->modules()->get();
+        });
+    }
+
+    /**
      * Morph by Many relationship between the role and the one of the possible user models.
      *
      * @param  string  $relationship
@@ -68,6 +84,21 @@ trait LaratrustRoleTrait
     }
 
     /**
+     * Many-to-Many relations with the permission model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function modules()
+    {
+        return $this->belongsToMany(
+            Config::get('laratrust.models.module'),
+            Config::get('laratrust.tables.module_role'),
+            Config::get('laratrust.foreign_keys.role'),
+            Config::get('laratrust.foreign_keys.module')
+        );
+    }
+
+    /**
      * Boots the role model and attaches event listener to
      * remove the many-to-many records when trying to delete.
      * Will NOT delete any records if the role model uses soft deletes.
@@ -94,6 +125,7 @@ trait LaratrustRoleTrait
             }
 
             $role->permissions()->sync([]);
+            $role->modules()->sync([]);
 
             foreach (array_keys(Config::get('laratrust.user_models')) as $key) {
                 $role->$key()->sync([]);
@@ -130,6 +162,14 @@ trait LaratrustRoleTrait
         foreach ($this->cachedPermissions() as $perm) {
             if (str_is($permission, $perm->name)) {
                 return true;
+            }
+        }
+
+        foreach ($this->cachedModules() as $module) {
+            foreach ($module->permssions() as $perm) {
+                if (str_is($permission, $perm->name)) {
+                    return true;
+                }
             }
         }
 
@@ -214,6 +254,118 @@ trait LaratrustRoleTrait
     }
 
     /**
+     * Checks if the role has a module by its name.
+     *
+     * @param  string|array $module Module name or array of module names.
+     * @param  bool $requireAll All modules in the array are required.
+     * @return bool
+     */
+    public function hasModule($module, $requireAll = false)
+    {
+        if (is_array($module)) {
+            foreach ($module as $moduleName) {
+                $hasModule = $this->hasModule($moduleName);
+
+                if ($hasModule && !$requireAll) {
+                    return true;
+                } elseif (!$hasModule && $requireAll) {
+                    return false;
+                }
+            }
+
+            // If we've made it this far and $requireAll is FALSE, then NONE of the permissions were found.
+            // If we've made it this far and $requireAll is TRUE, then ALL of the permissions were found.
+            // Return the value of $requireAll.
+            return $requireAll;
+        }
+
+        foreach ($this->cachedModules() as $module) {
+            if (str_is($module, $module->name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Save the inputted permissions.
+     *
+     * @param  mixed $modules
+     * @return $this
+     */
+    public function syncModules($modules)
+    {
+        // If the modules is empty it will delete all associations.
+        $this->modules()->sync($modules);
+        $this->flushCache();
+
+        return $this;
+    }
+
+    /**
+     * Attach permission to current role.
+     *
+     * @param  object|array $module
+     * @return $this
+     */
+    public function attachModule($module)
+    {
+        $this->modules()->attach($this->getIdFor($module));
+        $this->flushCache();
+
+        return $this;
+    }
+
+    /**
+     * Detach permission from current role.
+     *
+     * @param  object|array $module
+     * @return $this
+     */
+    public function detachModule($module)
+    {
+        $this->modules()->detach($this->getIdFor($module));
+        $this->flushCache();
+
+        return $this;
+    }
+
+    /**
+     * Attach multiple permissions to current role.
+     *
+     * @param  mixed $modules
+     * @return $this
+     */
+    public function attachModules($modules)
+    {
+        foreach ($modules as $module) {
+            $this->attachModule($module);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Detach multiple permissions from current role
+     *
+     * @param  mixed $modules
+     * @return $this
+     */
+    public function detachModules($modules = null)
+    {
+        if (!$modules) {
+            $modules = $this->modules()->get();
+        }
+
+        foreach ($modules as $module) {
+            $this->detachModule($module);
+        }
+
+        return $this;
+    }
+
+    /**
      * Flush the role's cache.
      *
      * @return void
@@ -221,6 +373,7 @@ trait LaratrustRoleTrait
     public function flushCache()
     {
         Cache::forget('laratrust_permissions_for_role_' . $this->getKey());
+        Cache::forget('laratrust_modules_for_role_' . $this->getKey());
     }
 
     /**

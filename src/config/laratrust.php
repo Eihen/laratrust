@@ -33,6 +33,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Use permission modules feature in the package
+    |--------------------------------------------------------------------------
+    |
+    | Defines if Laratrust will use the permission modules feature.
+    | Please check the docs to see what you need to do in case you have the package already configured.
+    |
+    */
+    'use_modules' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Laratrust User Models
     |--------------------------------------------------------------------------
     |
@@ -72,6 +83,12 @@ return [
          * Team model
          */
         'team' => 'App\Team',
+
+
+        /**
+         * Module model
+         */
+        'module' => 'App\Module',
 
     ],
 
@@ -114,6 +131,27 @@ return [
          */
         'permission_role' => 'permission_role',
 
+
+        /**
+         * Modules table.
+         */
+        'modules' => 'modules',
+
+        /**
+         * Permission - Module intermediate table.
+         */
+        'permission_module' => 'permission_module',
+
+        /**
+         * Module - Role intermediate table.
+         */
+        'module_role' => 'module_role',
+
+        /**
+         * Module - User intermediate table.
+         */
+        'module_user' => 'module_user',
+
     ],
 
     /*
@@ -144,6 +182,12 @@ return [
          * Role foreign key on Laratrust's role_user and permission_user tables.
          */
         'team' => 'team_id',
+
+
+        /**
+         * Module foreign key on Laratrust's permission_module, module_role and module_user tables.
+         */
+        'module' => 'module_id',
 
     ],
 

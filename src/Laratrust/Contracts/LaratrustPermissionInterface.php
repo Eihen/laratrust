@@ -27,4 +27,9 @@ interface LaratrustPermissionInterface
      * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
      */
     public function getMorphByUserRelation($relationship);
+    
+    /**
+     * Many-to-Many relations with the module model.
+     */
+    public function modules();
 }

@@ -27,6 +27,13 @@ interface LaratrustUserInterface
     public function permissions();
 
     /**
+     * Many-to-Many relations with the Module model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphToMany
+     */
+    public function modules();
+
+    /**
      * Checks if the user has a role by its name.
      *
      * @param  string|array  $name       Role name or array of role names.
@@ -168,6 +175,61 @@ interface LaratrustUserInterface
     public function syncPermissions($permissions = [], $team = null);
 
     /**
+     * Check if user has a module by its name.
+     *
+     * @param  string|array $module Module string or array of permissions.
+     * @param  string|bool $team Team name or requiredAll roles.
+     * @param  bool $requireAll All roles in the array are required.
+     * @return bool
+     */
+    public function hasModule($module, $team = null, $requireAll = false);
+
+    /**
+     * Save the inputted modules.
+     *
+     * @param $modules
+     *
+     * @return array
+     */
+    public function syncModules($modules);
+
+    /**
+     * Attach module to current user.
+     *
+     * @param  object|array $module
+     *
+     * @return void
+     */
+    public function attachModule($module);
+
+    /**
+     * Detach permission from current user.
+     *
+     * @param  object|array $module
+     *
+     * @return void
+     */
+    public function detachModule($module);
+
+    /**
+     * Attach multiple permissions to current user.
+     *
+     * @param  mixed $modules
+     *
+     * @return void
+     */
+    public function attachModules($modules);
+
+    /**
+     * Detach multiple permissions from current user
+     *
+     * @param  mixed $modules
+     *
+     * @return void
+     */
+    public function detachModules($modules);
+
+    /**
      * Checks if the user owns the thing.
      *
      * @param  Object  $thing
@@ -195,6 +257,17 @@ interface LaratrustUserInterface
      * @return boolean
      */
     public function canAndOwns($permission, $thing, $options = []);
+
+    /**
+     * Checks if the user has some module and if he owns the thing.
+     *
+     * @param string|array $module
+     * @param Object $thing
+     * @param array $options
+     *
+     * @return boolean
+     */
+    public function hasModuleAndOwns($module, $thing, $options = []);
 
     /**
      * Return all the user permissions.
