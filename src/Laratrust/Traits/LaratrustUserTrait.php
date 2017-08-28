@@ -265,6 +265,14 @@ trait LaratrustUserTrait
                     return true;
                 }
             }
+
+            foreach ($role->cachedModules() as $module) {
+                foreach ($module->cachedPermissions() as $perm) {
+                    if (str_is($permission, $perm->name)) {
+                        return true;
+                    }
+                }
+            }
         }
 
         foreach ($this->cachedModules() as $module) {
@@ -799,21 +807,34 @@ trait LaratrustUserTrait
      */
     public function allPermissions()
     {
-        $roles = $this->roles()->with('permissions')->get();
+        // Get direct user permissions
         $permissions = $this->cachedPermissions();
 
-        $roles = $roles->flatMap(function ($role) {
-            return $role->permissions;
-        });
-
-        // Get permissions from modules
-        $modules = $this->modules()->with('permissions')->get()->flatMap(
-            function ($module) {
-                return $module->permissions;
+        // Get permissions from roles (direct permissions + from modules)
+        $roles = $this->roles()->with('permissions')->get();
+        $permissions = $roles->flatMap(
+            function ($role) {
+                return $role->permissions;
             }
-        );
+        )->merge($permissions);
 
-        return $permissions->merge($roles)->merge($modules)->unique('name');
+        if (Config::get('laratrust.use_modules')) {
+            // Get permissions from user modules
+            $permissions = $this->modules()->with('permissions')->get()->flatMap(
+                function ($module) {
+                    return $module->permissions;
+                }
+            )->merge($permissions);
+
+            // Get permissions from roles modules
+            $permissions = $roles->flatMap(function ($role) {
+                return $role->modules->flatMap(function ($module) {
+                    return $module->permissions;
+                });
+            })->merge($permissions);
+        }
+
+        return $permissions->unique('name');
     }
 
     /**
