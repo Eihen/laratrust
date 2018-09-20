@@ -470,7 +470,7 @@ trait LaratrustUserTrait
      */
     private function detachModel($relationship, $objectType, $object, $team)
     {
-        if (!in_array($relationship, ['roles', 'permission', 'modules'])) {
+        if (!in_array($relationship, ['roles', 'permissions', 'modules'])) {
             throw new InvalidArgumentException;
         }
 
