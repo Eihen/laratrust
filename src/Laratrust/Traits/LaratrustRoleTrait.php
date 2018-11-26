@@ -166,7 +166,7 @@ trait LaratrustRoleTrait
         }
 
         foreach ($this->cachedModules() as $module) {
-            foreach ($module->permssions() as $perm) {
+            foreach ($module->permissions() as $perm) {
                 if (str_is($permission, $perm->name)) {
                     return true;
                 }
